@@ -1,0 +1,48 @@
+# This is a basic workflow to help you get started with Actions
+name: 'Codebuild Run Build'
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - name: Run CodeBuild
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: my-codebuild-job
+          disable-source-override: true
+          buildspec-override:   |
+            version: 0.2
+            phases:
+              install:
+                runtime-versions:
+                  nodejs: 16
+                commands:
+                  - npm install -g typescript
+                  - npm install
+              pre_build:
+                commands:
+                  - echo Installing source NPM dependencies...
+              build:
+                commands:
+                  - echo Build started on `date`
+                  - tsc
+                  - npm prune --production
+                post_build:
+                  commands:
+                    - echo Build completed on `date`  
+            artifacts:
+              type: zip
+              files:
+                - package.json
+                - package-lock.json
